@@ -45,5 +45,3 @@ contract BurnStorage is Ownable {
 
 }
 
-
-//0xa4f4d8ff4d52ab7d69035d4504661d730f74a24c
