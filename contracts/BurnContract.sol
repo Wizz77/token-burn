@@ -28,6 +28,7 @@ contract BurnContract{
 
     uint256 contractBalance = cVToken.balanceOf(address(this));
     cVToken.safeTransfer(BurnStorageContract, contractBalance);
+    AmountBurned = AmountBurned.add(contractBalance);
     emit Burned(contractBalance);
     return true;
 
