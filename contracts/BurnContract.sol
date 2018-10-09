@@ -15,14 +15,13 @@ contract BurnContract{
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
-  constructor(){
+  constructor()public{
     AmountBurned = 0;
     bytes32 name = "BurnStorage";
     BurnStorageContract = new BurnStorage(name);
   }
 
   event Burned(uint256 amount);
-
 
   function Burn() public returns(bool){
 
@@ -34,15 +33,30 @@ contract BurnContract{
 
   }
 
+  function getToken()public view returns(IERC20){
+    return cVToken;
+  }
+
+  function getBurnContractAddress()public view returns(address){
+    return BurnStorageContract;
+  }
+
+  function getAmountBurned()public view returns(uint256){
+    return AmountBurned;
+  }
+
+  function getBurnStorageBalance()public view returns(uint256){
+    return cVToken.balanceOf(BurnStorageContract);
+  }
+
 }
 
 contract BurnStorage is Ownable {
     bytes32 public Name;
 
-    constructor(bytes32 name){
+    constructor(bytes32 name)public{
         Name = name;
       renounceOwnership();
     }
 
 }
-
