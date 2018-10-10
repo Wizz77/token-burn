@@ -27,6 +27,11 @@ contract BurnContract{
     cVToken = _tokenAddress;
   }
 
+  function getBurnChildOwner()view returns(address){
+    BurnStorage child = BurnStorage(BurnStorageContract);
+    return child.owner();
+  }
+
   function Burn() public returns(bool){
 
     uint256 contractBalance = cVToken.balanceOf(address(this));

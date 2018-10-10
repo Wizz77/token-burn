@@ -7,6 +7,8 @@ const chai = require('chai');
 const should = chai.should;
 
 const OneToken = new BigNumber(web3.toWei(1, 'ether'));
+const ZeroAddress = "0x0000000000000000000000000000000000000000";
+
 
 contract('BurnContract', async (accounts) => {
   it('Initial burned total should be 0', async () => {
@@ -22,7 +24,6 @@ contract('BurnContract', async (accounts) => {
     const BurnContractInstance = await BurnContract.deployed();
 
     const BurnChildContractAddress = await BurnContractInstance.getBurnContractAddress.call();
-    const ZeroAddress = "0x0000000000000000000000000000000000000000";
 
     assert.notEqual(BurnChildContractAddress,ZeroAddress,"Address is equal to 0x00, Probably constructor failed to create contract");
 
@@ -52,6 +53,14 @@ contract('BurnContract', async (accounts) => {
     const amount_to_be_received = balanceAcc1.plus(balanceAcc2);
 
     expect(BalancePostTransfer.valueOf()).to.equal(amount_to_be_received.valueOf());
+  });
+
+  it('Initial child contract owner should be 0x0', async()=>{
+
+    const BurnInstance = await BurnContract.deployed();
+    child_contract_owner = await BurnInstance.getBurnChildOwner.call();
+
+    assert.equal(child_contract_owner,ZeroAddress,"Contract is not created or ownership not renounced")
   });
 
 });
