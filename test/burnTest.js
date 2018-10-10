@@ -14,29 +14,31 @@ const amount_to_mint2 = BigNumber(OneToken.times(465573989))
 
 contract('BurnContract', async (accounts) => {
   it('Initial burned total should be 0', async () => {
-    const BurnContractInstance = await BurnContract.deployed()
+    const BurnInstance = await BurnContract.deployed()
 
-    const BurnedAmount = BigNumber(await BurnContractInstance.getAmountBurned.call());
+    const BurnedAmount = BigNumber(await BurnInstance.getAmountBurned.call());
 
     assert.equal(BurnedAmount.valueOf(), 0, 'Initial burned amount is not equal to 0')
   });
 
   it('Initial burn child contract address should not be equal to 0x0', async ()=>{
 
-    const BurnContractInstance = await BurnContract.deployed();
+    const BurnInstance = await BurnContract.deployed();
 
-    const BurnChildContractAddress = await BurnContractInstance.getBurnContractAddress.call();
+    const BurnChildContractAddress = await BurnInstance.getBurnContractAddress.call();
 
     assert.notEqual(BurnChildContractAddress,ZeroAddress,"Address is equal to 0x00, Probably constructor failed to create contract");
+
+
 
   });
 
   it('Contract should receive cV tokens', async ()=>{ //TODO modify after finding out how to test hardcoded variables
 
-    let tokenInstance = await cVToken.deployed();
+    tokenInstance = await cVToken.deployed();
     await tokenInstance.changeTransferLock(0, {from: accounts[0]}); //Unlock token transfers
 
-    let BurnInstance = await BurnContract.deployed();
+    BurnInstance = await BurnContract.deployed();
     const BurnAddress = await BurnInstance.getAddress.call(); // get address of BurnInstance
 
     await tokenInstance.mint(accounts[1],amount_to_mint1.valueOf(), {from: accounts[0]}); //mint tokens to acc1
@@ -64,24 +66,61 @@ contract('BurnContract', async (accounts) => {
     assert.equal(child_contract_owner,ZeroAddress,"Contract is not created or ownership not renounced")
   });
 
-  it('Burn mechanism works properly', async()=>{
+  it('Burn mechanism should work properly', async()=>{
 
     const tokenInstance = await cVToken.deployed();
-    const BurnContractInstance = await BurnContract.deployed();
+    const BurnInstance = await BurnContract.deployed();
 
     await tokenInstance.changeTransferLock(0, {from: accounts[0]});
-    const BurnAddress = await BurnContractInstance.getAddress.call();
+    const BurnAddress = await BurnInstance.getAddress.call();
 
     await tokenInstance.mint(BurnAddress,amount_to_mint1.valueOf(), {from: accounts[0]});
 
-    await BurnContractInstance.Burn({from: accounts[1]});
+    await BurnInstance.Burn({from: accounts[1]});
 
-    BurnChildBalance = BigNumber(await BurnContractInstance.getBurnStorageBalance.call());
-    AmountBurned = BigNumber(await BurnContractInstance.getAmountBurned.call());
+    BurnChildBalance = BigNumber(await BurnInstance.getBurnStorageBalance.call());
+    AmountBurned = BigNumber(await BurnInstance.getAmountBurned.call());
     ContractBalanceAfterBurn = BigNumber(await tokenInstance.balanceOf(BurnAddress))
 
     assert.equal(BurnChildBalance.valueOf(),AmountBurned.valueOf(),"Amount burned and burn child amount does not match");
     assert.equal(ContractBalanceAfterBurn.valueOf(),0,"Contract still holds tokens, burn does not work properly");
+  });
+
+  it('Burn mechanism should work properly after multiple transfers', async()=>{
+
+    tokenInstance = await cVToken.deployed();
+    await tokenInstance.changeTransferLock(0, {from: accounts[0]}); //Unlock token transfers
+
+    BurnInstance = await BurnContract.deployed();
+    const BurnAddress = await BurnInstance.getAddress.call(); //
+
+    await tokenInstance.mint(accounts[1],amount_to_mint1.valueOf(), {from: accounts[0]}); //mint tokens to acc1
+    await tokenInstance.mint(accounts[2],amount_to_mint2.valueOf(), {from: accounts[0]}); //mint tokens to acc2
+
+    balanceAcc1 = BigNumber(await tokenInstance.balanceOf.call(accounts[1]));
+    balanceAcc2 = BigNumber(await tokenInstance.balanceOf.call(accounts[2]));
+
+    await tokenInstance.transfer(BurnAddress,balanceAcc1.valueOf(), {from: accounts[1]});
+
+    await BurnInstance.Burn({from: accounts[2]});
+    ContractBalanceAfterBurn1 = BigNumber(await tokenInstance.balanceOf(BurnAddress))
+    assert.equal(ContractBalanceAfterBurn1.valueOf(),0,"Contract still holds tokens, burn does not work properly, after 1 account transfer and 2 account call");
+
+    await tokenInstance.transfer(BurnAddress,balanceAcc2.valueOf(), {from: accounts[2]});
+    await BurnInstance.Burn({from: accounts[1]});
+    ContractBalanceAfterBurn2 = BigNumber(await tokenInstance.balanceOf(BurnAddress))
+    assert.equal(ContractBalanceAfterBurn2.valueOf(),0,"Contract still holds tokens, burn does not work properly, after 2 account transfer and 1 account call");
+
+    TotalBurn = BigNumber(await BurnInstance.getAmountBurned.call());
+
+    BurnChildBalance = BigNumber(await BurnInstance.getBurnStorageBalance.call());
+
+    balanceAcc1 = BigNumber(await tokenInstance.balanceOf.call(accounts[1]));
+    balanceAcc2 = BigNumber(await tokenInstance.balanceOf.call(accounts[2]));
+
+    assert.equal(BurnChildBalance.valueOf(),TotalBurn.valueOf(),"Tokens burned does not match burn child balance");
+    assert.equal(balanceAcc1.valueOf(),0,"Account 1 still has tokens left");
+    assert.equal(balanceAcc2.valueOf(),0,"Account 2 still has tokens left");
   });
 
 });
