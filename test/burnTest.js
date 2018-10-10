@@ -37,14 +37,17 @@ contract('BurnContract', async (accounts) => {
     let BurnInstance = await BurnContract.deployed();
     const BurnAddress = await BurnInstance.getAddress.call(); // get address of BurnInstance
 
-    const amount_to_mint1 = OneToken.times(5000);
-    const amount_to_mint2 = OneToken.times(10000);
+    const amount_to_mint1 = BigNumber(OneToken.times(5000))
+    const amount_to_mint2 = BigNumber(OneToken.times(10000))
 
     await tokenInstance.mint(accounts[1],amount_to_mint1.valueOf(), {from: accounts[0]}); //mint tokens to acc1
     await tokenInstance.mint(accounts[2],amount_to_mint2.valueOf(), {from: accounts[0]}); //mint tokens to acc2
 
     balanceAcc1 = BigNumber(await tokenInstance.balanceOf.call(accounts[1]));
     balanceAcc2 = BigNumber(await tokenInstance.balanceOf.call(accounts[2]));
+    expect(balanceAcc1.valueOf()).to.equal(amount_to_mint1.valueOf());
+    expect(balanceAcc2.valueOf()).to.equal(amount_to_mint2.valueOf());
+
 
     await tokenInstance.transfer(BurnAddress,balanceAcc1.valueOf(), {from: accounts[1]});
     await tokenInstance.transfer(BurnAddress,balanceAcc2.valueOf(), {from: accounts[2]});

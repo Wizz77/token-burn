@@ -8,24 +8,21 @@ import "./SafeMath.sol";
 
 contract BurnContract{
 
-  IERC20 public cVToken; //TODO hardcode
+  IERC20 public cVToken; //TODO hardcode a constant real token address
   address public BurnStorageContract;
   uint256 public AmountBurned;
 
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
-  constructor()public{
+  constructor(IERC20 _cVToken)public{
     AmountBurned = 0;
     bytes32 name = "BurnStorage";
     BurnStorageContract = new BurnStorage(name);
+    cVToken = _cVToken; // todo remove on launch and hardcode address of the token
   }
 
   event Burned(uint256 amount);
-
-  function setToken(IERC20 _tokenAddress){
-    cVToken = _tokenAddress;
-  }
 
   function getBurnChildOwner()view returns(address){
     BurnStorage child = BurnStorage(BurnStorageContract);
