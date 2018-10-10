@@ -9,14 +9,16 @@ const should = chai.should;
 const OneToken = new BigNumber(web3.toWei(1, 'ether'));
 const ZeroAddress = "0x0000000000000000000000000000000000000000";
 
+const amount_to_mint1 = BigNumber(OneToken.times(465570989))
+const amount_to_mint2 = BigNumber(OneToken.times(465573989))
 
 contract('BurnContract', async (accounts) => {
   it('Initial burned total should be 0', async () => {
     const BurnContractInstance = await BurnContract.deployed()
 
-    const BurnedAmount = await BurnContractInstance.getAmountBurned.call()
+    const BurnedAmount = BigNumber(await BurnContractInstance.getAmountBurned.call());
 
-    assert.equal(BurnedAmount, 0, 'Initial burned amount is not equal to 1')
+    assert.equal(BurnedAmount.valueOf(), 0, 'Initial burned amount is not equal to 0')
   });
 
   it('Initial burn child contract address should not be equal to 0x0', async ()=>{
@@ -37,9 +39,6 @@ contract('BurnContract', async (accounts) => {
     let BurnInstance = await BurnContract.deployed();
     const BurnAddress = await BurnInstance.getAddress.call(); // get address of BurnInstance
 
-    const amount_to_mint1 = BigNumber(OneToken.times(5000))
-    const amount_to_mint2 = BigNumber(OneToken.times(10000))
-
     await tokenInstance.mint(accounts[1],amount_to_mint1.valueOf(), {from: accounts[0]}); //mint tokens to acc1
     await tokenInstance.mint(accounts[2],amount_to_mint2.valueOf(), {from: accounts[0]}); //mint tokens to acc2
 
@@ -47,7 +46,6 @@ contract('BurnContract', async (accounts) => {
     balanceAcc2 = BigNumber(await tokenInstance.balanceOf.call(accounts[2]));
     expect(balanceAcc1.valueOf()).to.equal(amount_to_mint1.valueOf());
     expect(balanceAcc2.valueOf()).to.equal(amount_to_mint2.valueOf());
-
 
     await tokenInstance.transfer(BurnAddress,balanceAcc1.valueOf(), {from: accounts[1]});
     await tokenInstance.transfer(BurnAddress,balanceAcc2.valueOf(), {from: accounts[2]});
@@ -64,6 +62,26 @@ contract('BurnContract', async (accounts) => {
     child_contract_owner = await BurnInstance.getBurnChildOwner.call();
 
     assert.equal(child_contract_owner,ZeroAddress,"Contract is not created or ownership not renounced")
+  });
+
+  it('Burn mechanism works properly', async()=>{
+
+    const tokenInstance = await cVToken.deployed();
+    const BurnContractInstance = await BurnContract.deployed();
+
+    await tokenInstance.changeTransferLock(0, {from: accounts[0]});
+    const BurnAddress = await BurnContractInstance.getAddress.call();
+
+    await tokenInstance.mint(BurnAddress,amount_to_mint1.valueOf(), {from: accounts[0]});
+
+    await BurnContractInstance.Burn({from: accounts[1]});
+
+    BurnChildBalance = BigNumber(await BurnContractInstance.getBurnStorageBalance.call());
+    AmountBurned = BigNumber(await BurnContractInstance.getAmountBurned.call());
+    ContractBalanceAfterBurn = BigNumber(await tokenInstance.balanceOf(BurnAddress))
+
+    assert.equal(BurnChildBalance.valueOf(),AmountBurned.valueOf(),"Amount burned and burn child amount does not match");
+    assert.equal(ContractBalanceAfterBurn.valueOf(),0,"Contract still holds tokens, burn does not work properly");
   });
 
 });
