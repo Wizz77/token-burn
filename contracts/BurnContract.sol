@@ -8,7 +8,7 @@ import "./SafeMath.sol";
 
 contract BurnContract{
 
-  IERC20 public constant cVToken = IERC20(0xafff042f602762b59442660acdf34fde8681d016);
+  IERC20 public cVToken; //TODO hardcode
   address public BurnStorageContract;
   uint256 public AmountBurned;
 
@@ -22,6 +22,10 @@ contract BurnContract{
   }
 
   event Burned(uint256 amount);
+
+  function setToken(IERC20 _tokenAddress){
+    cVToken = _tokenAddress;
+  }
 
   function Burn() public returns(bool){
 
@@ -47,6 +51,10 @@ contract BurnContract{
 
   function getBurnStorageBalance()public view returns(uint256){
     return cVToken.balanceOf(BurnStorageContract);
+  }
+
+  function getAddress()public view returns(address){
+    return address(this);
   }
 
 }
