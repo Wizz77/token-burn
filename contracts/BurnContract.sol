@@ -8,7 +8,7 @@ import "./SafeMath.sol";
 
 contract BurnContract{
 
-  IERC20 public cVToken; //TODO hardcode a constant real token address
+  IERC20 public cVToken;
   address public BurnStorageContract;
   uint256 public AmountBurned;
 
@@ -19,7 +19,7 @@ contract BurnContract{
     AmountBurned = 0;
     bytes32 name = "BurnStorage";
     BurnStorageContract = new BurnStorage(name);
-    cVToken = _cVToken; // todo remove on launch and hardcode address of the token
+    cVToken = _cVToken;
   }
 
   event Burned(uint256 amount);
