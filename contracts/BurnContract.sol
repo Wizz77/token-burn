@@ -1,7 +1,6 @@
 pragma solidity ^0.4.24;
 
 import "./IERC20.sol";
-import "./Ownable.sol";
 import "./ERC20.sol";
 import "./SafeERC20.sol";
 import "./SafeMath.sol";
@@ -9,32 +8,36 @@ import "./SafeMath.sol";
 contract BurnContract{
 
   IERC20 public cVToken;
-  address public BurnStorageContract;
+  address public constant burnAddress = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
   uint256 public AmountBurned;
+
+  uint256 private previousBurnBalance;
 
   using SafeMath for uint256;
   using SafeERC20 for IERC20;
 
   constructor(IERC20 _cVToken)public{
     AmountBurned = 0;
-    bytes32 name = "BurnStorage";
-    BurnStorageContract = new BurnStorage(name);
     cVToken = _cVToken;
+    previousBurnBalance = 0;
   }
 
   event Burned(uint256 amount);
 
-  function getBurnChildOwner()view returns(address){
-    BurnStorage child = BurnStorage(BurnStorageContract);
-    return child.owner();
-  }
-
   function Burn() public returns(bool){
 
-    uint256 contractBalance = cVToken.balanceOf(address(this));
-    cVToken.safeTransfer(BurnStorageContract, contractBalance);
-    AmountBurned = AmountBurned.add(contractBalance);
-    emit Burned(contractBalance);
+    uint256 contractBalance = cVToken.balanceOf(address(this)); //Take current t
+    cVToken.safeTransfer(burnAddress, contractBalance);
+
+    uint256 currentBurnBalance = cVToken.balanceOf(burnAddress);
+
+    uint256 BurnedAmount = currentBurnBalance.sub(previousBurnBalance);
+
+    emit Burned(BurnedAmount);
+
+    AmountBurned = currentBurnBalance;
+    previousBurnBalance = AmountBurned;
+
     return true;
 
   }
@@ -43,30 +46,16 @@ contract BurnContract{
     return cVToken;
   }
 
-  function getBurnContractAddress()public view returns(address){
-    return BurnStorageContract;
-  }
-
   function getAmountBurned()public view returns(uint256){
     return AmountBurned;
-  }
-
-  function getBurnStorageBalance()public view returns(uint256){
-    return cVToken.balanceOf(BurnStorageContract);
   }
 
   function getAddress()public view returns(address){
     return address(this);
   }
 
-}
-
-contract BurnStorage is Ownable {
-    bytes32 public Name;
-
-    constructor(bytes32 name)public{
-        Name = name;
-      renounceOwnership();
-    }
+  function getBurnAddress()public view returns(address){
+    return address(burnAddress);
+  }
 
 }
