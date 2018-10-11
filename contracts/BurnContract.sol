@@ -8,7 +8,7 @@ import "./SafeMath.sol";
 contract BurnContract{
 
   IERC20 public cVToken;
-  address public constant burnAddress = address(0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF);
+  address public constant burnAddress = address(1);
   uint256 public AmountBurned;
 
   uint256 private previousBurnBalance;
