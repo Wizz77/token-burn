@@ -9,7 +9,7 @@ contract BurnContract{
 
   IERC20 public cVToken;
   address public constant burnAddress = address(1);
-  uint256 public AmountBurned;
+  uint256 private AmountBurned;
 
   uint256 private previousBurnBalance;
 
@@ -22,9 +22,9 @@ contract BurnContract{
     previousBurnBalance = 0;
   }
 
-  event Burned(uint256 amount);
+  event Burn(uint256 amount);
 
-  function Burn() public returns(bool){
+  function burn() public returns(bool){
 
     uint256 contractBalance = cVToken.balanceOf(address(this)); //Take current t
     cVToken.safeTransfer(burnAddress, contractBalance);
@@ -33,7 +33,7 @@ contract BurnContract{
 
     uint256 BurnedAmount = currentBurnBalance.sub(previousBurnBalance);
 
-    emit Burned(BurnedAmount);
+    emit Burn(BurnedAmount);
 
     AmountBurned = currentBurnBalance;
     previousBurnBalance = AmountBurned;
@@ -47,7 +47,7 @@ contract BurnContract{
   }
 
   function getAmountBurned()public view returns(uint256){
-    return AmountBurned;
+    return cVToken.balanceOf(burnAddress);
   }
 
   function getAddress()public view returns(address){
@@ -56,6 +56,15 @@ contract BurnContract{
 
   function getBurnAddress()public view returns(address){
     return address(burnAddress);
+  }
+
+  function getAdjustedTotalSupply()public view returns(uint256){
+    uint256 originalTotalSupply = cVToken.totalSupply();
+    uint256 amountBurned = getAmountBurned();
+
+    uint256 adjustedTotalSupply = originalTotalSupply.sub(amountBurned);
+
+    return adjustedTotalSupply;
   }
 
 }

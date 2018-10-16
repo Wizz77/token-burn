@@ -57,15 +57,15 @@ contract('BurnContract', async (accounts) => {
 
     await tokenInstance.mint(BurnAddress,amount_to_mint1.valueOf(), {from: accounts[0]});
 
-    await BurnInstance.Burn({from: accounts[1]});
+    await BurnInstance.burn({from: accounts[1]});
 
     AmountBurned = BigNumber(await BurnInstance.getAmountBurned.call());
     BurnStorageAddress = await BurnInstance.getBurnAddress.call();
     ContractBalanceAfterBurn = BigNumber(await tokenInstance.balanceOf.call(BurnAddress));
     BurnStorageBalance = BigNumber(await tokenInstance.balanceOf.call(BurnStorageAddress));
 
-    //assert.equal(ContractBalanceAfterBurn.valueOf(),0,"Contract still holds tokens, burn does not work properly");
-    //assert.equal(BurnStorageBalance.valueOf(),AmountBurned.valueOf(),"Burn storage balance does not equal An");
+    assert.equal(ContractBalanceAfterBurn.valueOf(),0,"Contract still holds tokens, burn does not work properly");
+    assert.equal(BurnStorageBalance.valueOf(),AmountBurned.valueOf(),"Burn storage balance does not equal An");
   });
 
   it('Burn mechanism should work properly after multiple transfers', async()=>{
@@ -84,12 +84,12 @@ contract('BurnContract', async (accounts) => {
 
     await tokenInstance.transfer(BurnAddress,balanceAcc1.valueOf(), {from: accounts[1]});
 
-    await BurnInstance.Burn({from: accounts[2]});
+    await BurnInstance.burn({from: accounts[2]});
     ContractBalanceAfterBurn1 = BigNumber(await tokenInstance.balanceOf(BurnAddress))
     assert.equal(ContractBalanceAfterBurn1.valueOf(),0,"Contract still holds tokens, burn does not work properly, after 1 account transfer and 2 account call");
 
     await tokenInstance.transfer(BurnAddress,balanceAcc2.valueOf(), {from: accounts[2]});
-    await BurnInstance.Burn({from: accounts[1]});
+    await BurnInstance.burn({from: accounts[1]});
     ContractBalanceAfterBurn2 = BigNumber(await tokenInstance.balanceOf(BurnAddress))
     assert.equal(ContractBalanceAfterBurn2.valueOf(),0,"Contract still holds tokens, burn does not work properly, after 2 account transfer and 1 account call");
 
